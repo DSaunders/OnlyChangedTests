@@ -18,7 +18,7 @@ func main() {
 	changedFilesRelative := git.GetFilesChangedFromRevision(config.CompareToRevision)
 	changedFilesAbsolute := utils.RelativeToAbsolutePaths(changedFilesRelative)
 	log.Printf(
-		"- Found %v changed files: \n  %v\n",
+		"- Found %v changed file(s): \n  %v\n",
 		len(changedFilesAbsolute),
 		strings.Join(changedFilesAbsolute, "\n  "),
 	)
@@ -35,7 +35,7 @@ func main() {
 	log.Println("- Finding impacted tests")
 	testsToRun := depdencyTree.GetTopLevelNodesForFiles(changedFilesAbsolute)
 	log.Printf(
-		"- There are %v impacted test files to run: \n  %v\n",
+		"- There are %v impacted test file(s) to run: \n  %v\n",
 		len(testsToRun),
 		strings.Join(testsToRun, "\n  "),
 	)
@@ -43,7 +43,7 @@ func main() {
 	log.Println("- Generating Jest test selection code")
 	jest.WriteFilterFile(testsToRun)
 
-	log.Println("- Running Jest")
+	log.Printf("- Running %v test file(s) with Jest", len(testsToRun))
 	jest.Run(config)
 	log.Println("- Jest succeeded. All tests passed")
 }
