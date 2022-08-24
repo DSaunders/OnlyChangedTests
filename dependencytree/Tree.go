@@ -1,9 +1,10 @@
 package dependencytree
 
 import (
+	"catalyst/config"
+	"catalyst/filelist"
 	"io/ioutil"
 	"log"
-	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -16,14 +17,18 @@ type results struct {
 }
 
 type Tree struct {
-	TestNodes   []*Node
-	AllNodes    map[string]*Node
-	ImportRegex *regexp.Regexp
+	testNodes   []*Node
+	allNodes    map[string]*Node
+	importRegex *regexp.Regexp
+	fileList    *filelist.FileList
+	config      *config.Config
 }
 
-func BuildForFiles(tests []string) *Tree {
+func BuildForFiles(tests []string, filelist *filelist.FileList, config *config.Config) *Tree {
 	newTree := Tree{
-		ImportRegex: regexp.MustCompile(`(?im)import\s+?(?:(?:(?:[\w*\s{},]*)\s+from\s+?)|)(?:['|"](.*?)['|"]|(?:'.*?'))[\s]*?(?:;|$|)`),
+		fileList:    filelist,
+		config:      config,
+		importRegex: regexp.MustCompile(`(?im)import\s+?(?:(?:(?:[\w*\s{},]*)\s+from\s+?)|)(?:['|"](.*?)['|"]|(?:'.*?'))[\s]*?(?:;|$|)`),
 	}
 
 	newTree.Build(tests)
@@ -31,7 +36,6 @@ func BuildForFiles(tests []string) *Tree {
 	return &newTree
 }
 
-// TODO: Return the file tree
 func (tree *Tree) Build(rootPaths []string) {
 
 	visited := make(map[string]*Node)
@@ -45,8 +49,8 @@ func (tree *Tree) Build(rootPaths []string) {
 		node.Parents = nil
 	}
 
-	tree.TestNodes = graph.Children
-	tree.AllNodes = visited
+	tree.testNodes = graph.Children
+	tree.allNodes = visited
 }
 
 func (tree *Tree) recursivelyGetImports(visited map[string]*Node, parentNode *Node, filename string) {
@@ -70,58 +74,61 @@ func (tree *Tree) recursivelyGetImports(visited map[string]*Node, parentNode *No
 	imports := tree.getImports(filename)
 	for _, match := range imports {
 
-		withFileType := tree.getValidFile(filename, match)
+		withFileType := tree.getFullFilenameForImport(filename, match)
 		if withFileType == "" {
 			continue
 		}
 
 		tree.recursivelyGetImports(visited, thisNode, withFileType)
 	}
-
 }
 
-// optimisation, we've read the whole file tree ahead of time
-// anyway to find the tests, so we can do this bit in memory
-func (tree *Tree) getValidFile(rootFileName string, relativeFile string) string {
-	var withFileType string
+func (tree *Tree) getFullFilenameForImport(sourceFile string, importLocation string) string {
+	validExensions := tree.config.ModuleFileExtensions
 
-	// Is it an absolute import? If so, do nothing (can we resolve these somehow?)
-	if !strings.HasPrefix(relativeFile, "./") && !strings.HasPrefix(relativeFile, "../") {
-		return withFileType
+	var fullFilename string
+
+	// Can only handle these types of imports for now
+	if !strings.HasPrefix(importLocation, "./") && !strings.HasPrefix(importLocation, "../") {
+		return fullFilename
 	}
 
-	dir := filepath.Dir(rootFileName)
-	relative := filepath.Join(dir, relativeFile)
+	sourceFileDirectory := filepath.Dir(sourceFile)
+	relativePath := filepath.Join(sourceFileDirectory, importLocation)
 
-	// TODO: get from config
-	fileTypes := []string{".js", ".jsx", ".ts", ".tsx"}
-	for _, filetype := range fileTypes {
+	fileExtension := filepath.Ext(relativePath)
 
-		// TODO: if no extension already of course!
-		newName := relative + filetype
+	if fileExtension != "" &&
+		slices.Contains(validExensions, strings.ToLower(fileExtension)) {
+		// File has a valid extension aready, try to find it as-is before
+		// appending other extensions to it below
+		if !tree.fileList.Exists(relativePath) {
+			return relativePath
+		}
+	}
 
-		_, err := os.OpenFile(newName, os.O_RDONLY, 0400)
-		if err != nil {
+	// Try to add valid extensions to this import until
+	// we find a real file
+	for _, filetype := range validExensions {
+		newName := relativePath + filetype
+
+		if !tree.fileList.Exists(newName) {
 			continue
 		}
 
-		withFileType = newName
+		fullFilename = newName
 	}
 
-	return withFileType
+	return fullFilename
 }
 
-// TODO: Doesn't support commonjs yet
 func (tree *Tree) getImports(filename string) []string {
-	// Potential optimisation (test it), stream the file instead
-	// 'imports' are always at the start, so if we find them we
-	// can stop after them (in common js require can be anywhere though)
 	content, err := ioutil.ReadFile(filename)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	all := tree.ImportRegex.FindAllStringSubmatch(string(content), -1)
+	all := tree.importRegex.FindAllStringSubmatch(string(content), -1)
 
 	matches := make([]string, len(all))
 	for i, match := range all {
@@ -149,7 +156,7 @@ func (tree *Tree) GetTopLevelNodesForFiles(filenames []string) []string {
 
 func (tree *Tree) GetTopLevelNodesForFile(filename string) []string {
 
-	if _, found := tree.AllNodes[filename]; !found {
+	if _, found := tree.allNodes[filename]; !found {
 		// file isn't in our map, no test dependencies
 		return make([]string, 0)
 	}
@@ -160,7 +167,7 @@ func (tree *Tree) GetTopLevelNodesForFile(filename string) []string {
 	results := results{
 		ImpactedTests: make([]string, 0),
 	}
-	tree.visitNode(tree.AllNodes[filename], &results, visited)
+	tree.visitNode(tree.allNodes[filename], &results, visited)
 
 	return results.ImpactedTests
 }
@@ -175,9 +182,10 @@ func (tree *Tree) visitNode(node *Node, tests *results, visited map[*Node]bool) 
 	visited[node] = true
 
 	if len(node.Parents) == 0 {
-		// I am the top level
+		// I am the top level, so I am a test that must be run
 		tests.ImpactedTests = append(tests.ImpactedTests, node.FileName)
 	} else {
+		// Not top level, recursively walk up the tree
 		for _, parent := range node.Parents {
 			tree.visitNode(parent, tests, visited)
 		}

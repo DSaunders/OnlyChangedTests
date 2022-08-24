@@ -1,4 +1,4 @@
-module dependencytracker
+module catalyst
 
 go 1.19
 
