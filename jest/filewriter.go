@@ -2,11 +2,22 @@ package jest
 
 import (
 	"io/ioutil"
+	"log"
+	"os"
 	"strings"
 )
 
 func WriteFilterFile(testsToRun []string) {
+	log.Println(".. Generating test filter JavaScript file")
 	err := ioutil.WriteFile("selected-tests.js", []byte(getTestFileContents(testsToRun)), 0644)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func RemoveFilterFile() {
+	log.Println(".. Removing test filter JavaScript file")
+	err := os.Remove("selected-tests.js")
 	if err != nil {
 		panic(err)
 	}

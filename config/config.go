@@ -3,17 +3,20 @@ package config
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 )
 
 type Config struct {
-	CompareToRevision    string   `json:"compareToRevision"`
-	TestRegex            string   `json:"testRegex"`
-	IgnorePaths          []string `json:"ignorePaths"`
-	ModuleFileExtensions []string `json:"moduleExtensions"`
-	JestPath             string   `json:"jestPath"`
+	CompareToRevision        string   `json:"compareToRevision"`
+	TestRegex                string   `json:"testRegex"`
+	IgnorePaths              []string `json:"ignorePaths"`
+	ModuleFileExtensions     []string `json:"moduleExtensions"`
+	JestPath                 string   `json:"jestPath"`
+	LogFileFileNames         bool     `json:"logFullFileNames"`
+	IncludeTimestampInOutput bool     `json:"includeTimestampInOutput"`
 }
 
 func LoadConfig(filename string) *Config {
@@ -21,7 +24,9 @@ func LoadConfig(filename string) *Config {
 
 	if errors.Is(err, os.ErrNotExist) {
 
-		log.Println("- No config file found, creating a default file '" + filename + "'")
+		// Doesn't use 'log.', as it's not set up at this point so will add the default timestamp etc.
+		// and won't be consistent with later log messages
+		fmt.Println("No config file found, creating a default file '" + filename + "'")
 
 		// Doesn't exist, create the default config file
 		jsonObject, _ := json.MarshalIndent(getDefaultConfig(), "", "    ")
@@ -44,10 +49,12 @@ func LoadConfig(filename string) *Config {
 
 func getDefaultConfig() *Config {
 	return &Config{
-		JestPath:             `.\node_modules\.bin\jest`,
-		TestRegex:            `(/_tests/.*|(\.|/)(test|spec))\.tsx?$`,
-		IgnorePaths:          []string{"node_modules", ".idea", "coverage", ".git"},
-		ModuleFileExtensions: []string{".js", ".jsx", ".ts", ".tsx"},
-		CompareToRevision:    "origin/master",
+		JestPath:                 `.\node_modules\.bin\jest`,
+		TestRegex:                `(/_tests/.*|(\.|/)(test|spec))\.tsx?$`,
+		IgnorePaths:              []string{"node_modules", ".idea", "coverage", ".git"},
+		ModuleFileExtensions:     []string{".js", ".jsx", ".ts", ".tsx"},
+		CompareToRevision:        "origin/master",
+		LogFileFileNames:         false,
+		IncludeTimestampInOutput: true,
 	}
 }

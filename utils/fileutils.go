@@ -6,11 +6,11 @@ import (
 )
 
 func GetExecutingPath() string {
-	ex, err := os.Executable()
+	ex, err := os.Getwd()
 	if err != nil {
 		panic(err)
 	}
-	return filepath.Dir(ex)
+	return ex
 }
 
 func RelativeToAbsolutePaths(relativePaths []string) []string {
