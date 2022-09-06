@@ -1,8 +1,8 @@
 package filelist
 
 import (
-	"catalyst/config"
 	"io/fs"
+	"onlychangedtests/config"
 	"path/filepath"
 	"regexp"
 	"strings"

@@ -1,8 +1,8 @@
 package jest
 
 import (
-	"catalyst/config"
 	"log"
+	"onlychangedtests/config"
 	"os"
 	"os/exec"
 	"syscall"

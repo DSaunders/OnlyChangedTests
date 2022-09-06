@@ -1,10 +1,10 @@
 package dependencytree
 
 import (
-	"catalyst/config"
-	"catalyst/filelist"
 	"io/ioutil"
 	"log"
+	"onlychangedtests/config"
+	"onlychangedtests/filelist"
 	"path/filepath"
 	"regexp"
 	"strings"

@@ -1,4 +1,4 @@
-module catalyst
+module onlychangedtests
 
 go 1.19
 

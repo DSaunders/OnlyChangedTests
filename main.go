@@ -1,14 +1,14 @@
 package main
 
 import (
-	"catalyst/config"
-	"catalyst/dependencytree"
-	"catalyst/filelist"
-	"catalyst/git"
-	"catalyst/jest"
-	"catalyst/logger"
-	"catalyst/utils"
 	"log"
+	"onlychangedtests/config"
+	"onlychangedtests/dependencytree"
+	"onlychangedtests/filelist"
+	"onlychangedtests/git"
+	"onlychangedtests/jest"
+	"onlychangedtests/logger"
+	"onlychangedtests/utils"
 	"path"
 	"strings"
 	"time"
@@ -20,14 +20,10 @@ func main() {
 
 	start := time.Now()
 
-	configLocation := path.Join(utils.GetExecutingPath(), "catalyst.config.json")
+	configLocation := path.Join(utils.GetExecutingPath(), "runchangedtests.config.json")
 	config := config.LoadConfig(configLocation)
 
 	logger.Init(config.IncludeTimestampInOutput)
-
-	log.Println("***********************************************")
-	log.Println("* Catalyst                                    *")
-	log.Println("***********************************************")
 
 	changedFilesRelative := git.GetFilesChangedFromRevision(config.CompareToRevision)
 	changedFilesAbsolute := utils.RelativeToAbsolutePaths(changedFilesRelative)
