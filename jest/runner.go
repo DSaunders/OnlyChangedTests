@@ -16,7 +16,7 @@ func Run(config *config.Config) {
 
 	start := time.Now()
 
-	cmd := exec.Command(config.JestPath, "--filter=./selected-tests.js")
+	cmd := exec.Command(config.JestPath, "--filter=./selected-tests.js", "--passWithNoTests")
 	if err := cmd.Start(); err != nil {
 		log.Fatalf(color.Ize(color.Red, ".. Couldn't start Jest: %v\n"), err)
 	}
