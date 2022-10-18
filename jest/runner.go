@@ -2,9 +2,9 @@ package jest
 
 import (
 	"log"
-	"onlychangedtests/config"
 	"os"
 	"os/exec"
+	"runchangedtests/config"
 	"syscall"
 	"time"
 
@@ -26,6 +26,7 @@ func Run(config *config.Config) {
 			if _, ok := exiterr.Sys().(syscall.WaitStatus); ok {
 				log.Printf(".. Jest took %v\n", time.Since(start))
 				log.Println(color.Ize(color.Red, ".. Jest failed. There are likely test failures"))
+				log.Println(exiterr.Error())
 				RemoveFilterFile()
 				os.Exit(1)
 			}

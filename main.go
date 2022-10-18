@@ -2,14 +2,14 @@ package main
 
 import (
 	"log"
-	"onlychangedtests/config"
-	"onlychangedtests/dependencytree"
-	"onlychangedtests/filelist"
-	"onlychangedtests/git"
-	"onlychangedtests/jest"
-	"onlychangedtests/logger"
-	"onlychangedtests/utils"
 	"path"
+	"runchangedtests/config"
+	"runchangedtests/dependencytree"
+	"runchangedtests/filelist"
+	"runchangedtests/git"
+	"runchangedtests/jest"
+	"runchangedtests/logger"
+	"runchangedtests/utils"
 	"strings"
 	"time"
 
@@ -50,11 +50,12 @@ func main() {
 	}
 
 	log.Printf("Took %v\n", time.Since(start))
-
-	log.Printf("Running %v test file(s) with Jest:", len(testsToRun))
-	jest.WriteFilterFile(testsToRun)
-	jest.Run(config)
-	log.Println(color.Ize(color.Green, "Jest succeeded. All tests passed"))
+	if len(testsToRun) > 0 {
+		log.Printf("Running %v test file(s) with Jest:", len(testsToRun))
+		jest.WriteFilterFile(testsToRun)
+		jest.Run(config)
+		log.Println(color.Ize(color.Green, "Jest succeeded. All tests passed"))
+	}
 
 	log.Println("All done!")
 }

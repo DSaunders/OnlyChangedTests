@@ -2,9 +2,9 @@ package filelist
 
 import (
 	"io/fs"
-	"onlychangedtests/config"
 	"path/filepath"
 	"regexp"
+	"runchangedtests/config"
 	"strings"
 )
 

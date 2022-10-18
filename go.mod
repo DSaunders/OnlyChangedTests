@@ -1,4 +1,4 @@
-module onlychangedtests
+module runchangedtests
 
 go 1.19
 

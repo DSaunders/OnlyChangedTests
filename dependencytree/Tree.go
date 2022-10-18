@@ -3,10 +3,10 @@ package dependencytree
 import (
 	"io/ioutil"
 	"log"
-	"onlychangedtests/config"
-	"onlychangedtests/filelist"
 	"path/filepath"
 	"regexp"
+	"runchangedtests/config"
+	"runchangedtests/filelist"
 	"strings"
 
 	"golang.org/x/exp/slices"
