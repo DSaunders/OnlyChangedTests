@@ -26,7 +26,7 @@ func main() {
 	logger.Init(config.IncludeTimestampInOutput)
 
 	changedFilesRelative := git.GetFilesChangedFromRevision(config.CompareToRevision)
-	changedFilesAbsolute := utils.RelativeToAbsolutePaths(changedFilesRelative)
+	changedFilesAbsolute := utils.RelativeToAbsolutePaths(git.GetGitPath(), changedFilesRelative)
 	log.Printf("Found "+color.Ize(color.Bold, "%v changed file(s)")+"\n", len(changedFilesAbsolute))
 	if config.LogFileFileNames {
 		log.Printf("These are:\n  %v\n", strings.Join(changedFilesAbsolute, "\n  "))

@@ -24,3 +24,16 @@ func GetFilesChangedFromRevision(revision string) []string {
 
 	return withoutEmptyItems
 }
+
+func GetGitPath() string {
+	out, err := exec.Command("git", "rev-parse", "--show-toplevel").Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	pathWithoutLineEndings := strings.TrimSuffix(string(out), "\n")
+
+	log.Printf("Git path is %v", pathWithoutLineEndings)
+
+	return pathWithoutLineEndings
+}

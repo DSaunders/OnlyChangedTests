@@ -13,12 +13,10 @@ func GetExecutingPath() string {
 	return ex
 }
 
-func RelativeToAbsolutePaths(relativePaths []string) []string {
-	currentFolder := GetExecutingPath()
-
+func RelativeToAbsolutePaths(rootPath string, relativePaths []string) []string {
 	absolutePaths := make([]string, len(relativePaths))
 	for i, path := range relativePaths {
-		absolutePaths[i] = filepath.Join(currentFolder, path)
+		absolutePaths[i] = filepath.Join(rootPath, path)
 	}
 	return absolutePaths
 }
