@@ -1,6 +1,8 @@
 package jest
 
 import (
+	"bytes"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -16,12 +18,26 @@ func Run(config *config.Config) {
 
 	start := time.Now()
 
-	cmd := exec.Command(config.JestPath, "--filter=./selected-tests.js", "--passWithNoTests")
-	if err := cmd.Start(); err != nil {
-		log.Fatalf(color.Ize(color.Red, ".. Couldn't start Jest: %v\n"), err)
-	}
+	cmd := exec.Command(config.JestPath, "--filter=./selected-tests.js", "--passWithNoTests", "--runInBand")
 
-	if err := cmd.Wait(); err != nil {
+	// Create a buffer to stream the command output to stdout
+	var stdBuffer bytes.Buffer
+	mw := io.MultiWriter(os.Stdout, &stdBuffer)
+	cmd.Stdout = mw
+	cmd.Stderr = mw
+
+	log.Println(color.Ize(color.Gray, ".. Jest output begins below"))
+	log.Println(color.Ize(color.Gray, "-----"))
+
+	// Run the command and stream the output
+	err := cmd.Run()
+	log.Println(stdBuffer.String())
+
+	log.Println(color.Ize(color.Gray, "-----"))
+	log.Println(color.Ize(color.Gray, ".. End of Jest output"))
+
+	// Check the result of the command
+	if err != nil {
 		if exiterr, ok := err.(*exec.ExitError); ok {
 			if _, ok := exiterr.Sys().(syscall.WaitStatus); ok {
 				log.Printf(".. Jest took %v\n", time.Since(start))
